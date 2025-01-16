@@ -1,10 +1,27 @@
+# MERLIN And DAMP Refined Iteratively on Demand (MADRID)
+
+This implementation is still a work in progress. All credit to the DAMP implementation is listed in the DAMP portion of the Readme. Please support their code too by visiting the original fork.
+
+The official MADRID implementation in MATLAB is available [here](https://sites.google.com/view/madrid-icdm-23/home?authuser=0).
+
+## Run
+
+You can run the code using the following command.
+
+```
+python madrid.py
+```
+
+You can also import the MADRID function into your own code as a module for use in Jupyter notebooks or other Python scripts.
+
 # Discord Aware Matrix Profile (DAMP)
 
 Authors:
-* Siho Han ([@sihohan](https://github.com/sihohan/DAMP))
-* Jihwan Min ([@rtm-jihwan-min](https://github.com/rtm-jihwan-min))
-* Taeyeong Heo ([@htyvv](https://github.com/htyvv))
-* JuI Ma ([@iju298](https://github.com/iju298))
+
+- Siho Han ([@sihohan](https://github.com/sihohan/DAMP))
+- Jihwan Min ([@rtm-jihwan-min](https://github.com/rtm-jihwan-min))
+- Taeyeong Heo ([@htyvv](https://github.com/htyvv))
+- JuI Ma ([@iju298](https://github.com/iju298))
 
 This repository contains an unofficial Python implementation of Discord Aware Matrix Profile (DAMP), introduced in ["Matrix Profile XXIV: Scaling Time Series Anomaly Detection to Trillions of Datapoints and Ultra-fast Arriving Data Streams" (KDD '22)](https://dl.acm.org/doi/abs/10.1145/3534678.3539271). The official MATLAB implementation can be found [here](https://sites.google.com/view/discord-aware-matrix-profile/documentation).
 
@@ -20,9 +37,9 @@ This repository contains an unofficial Python implementation of Discord Aware Ma
 
 ## Requirements
 
-* Python >= 3.6
-* matplotlib
-* numpy
+- Python >= 3.6
+- matplotlib
+- numpy
 
 ## Datasets
 
@@ -31,6 +48,7 @@ This repository includes Bourke Street Mall as the default dataset (see the `dat
 ## Run
 
 You can run the code using the following command.
+
 ```
 python damp.py
 ```
@@ -41,4 +59,4 @@ Note that the input time series and its corresponding DAMP scores on the plot ar
 
 ## References
 
-* Lu, Yue, et al. "Matrix Profile XXIV: Scaling Time Series Anomaly Detection to Trillions of Datapoints and Ultra-fast Arriving Data Streams." Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining. 2022.
+- Lu, Yue, et al. "Matrix Profile XXIV: Scaling Time Series Anomaly Detection to Trillions of Datapoints and Ultra-fast Arriving Data Streams." Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining. 2022.
