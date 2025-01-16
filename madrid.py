@@ -30,6 +30,21 @@ def test_data_MADRID() -> np.ndarray:
     return y
 
 
+def MADRID_2_0(
+    T: np.ndarray,
+    minL: int,
+    maxL: int,
+    stepSize: int,
+    train_test_split: int,
+    enable_output: bool = True,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    """
+    Runs MADRID but with adjusted parameters based on execution time. Additionally
+    throws errors specific to the MADRID implementation.
+    """
+    pass
+
+
 def MADRID(
     T: np.ndarray,
     minL: int,
@@ -63,7 +78,7 @@ def MADRID(
     # Initialize arrays
     num_lengths = int(np.ceil((maxL + 1 - minL) / stepSize))
     MultiLengthDiscordTable = np.full((num_lengths, len(T)), -np.inf)
-    BSF = np.zeros(num_lengths)
+    BSF = np.zeros((num_lengths, 1))
     BSF_loc = np.full(num_lengths, np.nan)
 
     # For convergence plots
@@ -73,7 +88,7 @@ def MADRID(
     start_time = time.time()
 
     # Generate sequence lengths to test
-    m_set = np.arange(minL, maxL + 1, stepSize)
+    m_set = np.arange(minL, maxL, stepSize)
     m_pointer = len(m_set) // 2
     m = m_set[m_pointer]
 
@@ -83,81 +98,119 @@ def MADRID(
     BSF[m_pointer] = discord_score * (1 / (2 * np.sqrt(m)))
     BSF_loc[:] = position
 
-    print("Initial DAMP run complete")
+    m_pointer = 0
+    for m in m_set:
 
-    # Process other lengths using initial position
-    for idx, m in enumerate(m_set):
-        if idx == m_pointer:
+        if m_pointer == np.ceil(len(m_set) / 2):
             continue
 
         i = position
-        if m < 2 or i + m - 1 > len(T):
+        sub_length = m
+        if sub_length < 2 or i + sub_length - 1 > len(T):
             break
 
-        query = T[i : i + m]
-        # Compute left MP using brute force
-        MultiLengthDiscordTable[idx, i] = np.min(np.real(MASS_V2(T[:i], query))) * (
-            1 / (2 * np.sqrt(m))
-        )
+        query = T[i : i + sub_length - 1]
 
-        # Update best scores
-        BSF[idx] = MultiLengthDiscordTable[idx, i]
-        BSF_loc[idx] = i
+        # Use brute force to compute left MP
+        MultiLengthDiscordTable[m_pointer, i] = np.min(
+            np.real(MASS_V2(T[:i], query))
+        ) * (1 / (2 * np.sqrt(m)))
 
-    # Additional DAMP runs at min and max lengths
-    for test_length in [m_set[0], m_set[-1]]:
-        idx = 0 if test_length == m_set[0] else -1
-        _, new_pos, left_mp = DAMP_2_0(T, test_length, 1, train_test_split)
+        # Update the best so far discord score for current row
+        BSF[m_pointer] = MultiLengthDiscordTable[m_pointer, i]
+        BSF_loc[m_pointer] = i
+        m_pointer += 1
 
-        MultiLengthDiscordTable[idx, :] = left_mp * (1 / (2 * np.sqrt(test_length)))
-        BSF[idx] = np.max(MultiLengthDiscordTable[idx, :])
-        BSF_loc[idx] = np.argmax(MultiLengthDiscordTable[idx, :])
+    m_pointer = 0
+    m = m_set[m_pointer]
+    left_mp, _, position_2 = DAMP_2_0(T, m, 1, train_test_split)
+    MultiLengthDiscordTable[m_pointer, :] = left_mp * (1 / (2 * np.sqrt(m)))
 
-        # If new position found, process other lengths
-        if new_pos not in [position, BSF_loc[0 if idx == -1 else -1]]:
-            for m_idx, m in enumerate(m_set):
-                if m_idx in [0, m_pointer, len(m_set) - 1]:
-                    continue
+    BSF[m_pointer] = np.max(MultiLengthDiscordTable[m_pointer, :])
+    BSF_loc[m_pointer] = np.argmax(MultiLengthDiscordTable[m_pointer, :])
 
-                if new_pos + m - 1 > len(T):
-                    break
+    if position_2 != position:
+        m_pointer = 0
+        for m in m_set:
 
-                query = T[new_pos : new_pos + m]
-                MultiLengthDiscordTable[m_idx, new_pos] = np.min(
-                    np.real(MASS_V2(T[:new_pos], query))
-                ) * (1 / (2 * np.sqrt(m)))
+            if m_pointer == np.ceil(len(m_set) / 2) or m_pointer == 1:
+                continue
 
-                BSF[m_idx] = np.max(MultiLengthDiscordTable[m_idx, :])
-                BSF_loc[m_idx] = np.argmax(MultiLengthDiscordTable[m_idx, :])
+            i = position_2
+            sub_length = m
+            if i + sub_length - 1 > len(T):
+                break
 
-    initialization_time = time.time() - start_time
-    time_bf += initialization_time
+            query = T[i : i + sub_length - 1]
+            MultiLengthDiscordTable[m_pointer, i] = np.min(
+                np.real(MASS_V2(T[:i], query))
+            ) * (1 / (2 * np.sqrt(m)))
 
-    # Process remaining lengths
-    for idx, m in enumerate(m_set):
-        if idx in [0, m_pointer, len(m_set) - 1]:
+            BSF[m_pointer] = np.max(MultiLengthDiscordTable[m_pointer, :])
+            BSF_loc[m_pointer] = np.argmax(MultiLengthDiscordTable[m_pointer, :])
+            m_pointer += 1
+
+    m_pointer = len(m_set) - 1
+    m = m_set[m_pointer]
+    left_mp, _, position_3 = DAMP_2_0(T, m, 1, train_test_split)
+    MultiLengthDiscordTable[m_pointer, :] = left_mp * (1 / (2 * np.sqrt(m)))
+
+    BSF[m_pointer] = np.max(MultiLengthDiscordTable[m_pointer, :])
+    BSF_loc[m_pointer] = np.argmax(MultiLengthDiscordTable[m_pointer, :])
+
+    if position_3 != position_2 and position_3 != position:
+        m_pointer = 0
+        for m in m_set:
+
+            if m_pointer == np.ceil(len(m_set) / 2) or m_pointer == 1:
+                continue
+
+            i = position_3
+            sub_length = m
+            if i + sub_length - 1 > len(T):
+                break
+
+            query = T[i : i + sub_length - 1]
+
+            # Use brute force to compute left MP
+            MultiLengthDiscordTable[m_pointer, i] = np.min(
+                np.real(MASS_V2(T[0:i], query))
+            ) * (1 / (2 * np.sqrt(m)))
+
+            # Update the best so far discord score for current row
+            BSF[m_pointer] = np.max(MultiLengthDiscordTable[m_pointer, :])
+            BSF_loc[m_pointer] = np.argmax(MultiLengthDiscordTable[m_pointer, :])
+            m_pointer += 1
+
+    # Update data for storage plots
+    # initialization_time = time.time() - start_time
+    # time_bf += initialization_time
+    # time_sum_bsf.append([time_bf, time_bf])
+    # percent_sum_bsf.append([time_bf / time_bf, time_bf / time_bf])
+
+    m_pointer = 0
+    for m in m_set:
+
+        if (
+            m_pointer == np.ceil(len(m_set) / 2)
+            or m_pointer == 1
+            or m_pointer == len(m_set)
+        ):
             continue
 
-        start_time = time.time()
-        # Note: DAMP_topK_new implementation needed
         Results, BFS_for_i_plus_1, left_mp = DAMP_topK_new(
-            T, train_test_split, m, k, 0, max(BSFseed, BSF[idx])
+            T, train_test_split, m, k, 0, max(BSFseed, BSF[m_pointer])
         )
-        elapsed = time.time() - start_time
-        time_bf += elapsed
 
-        # Update results
-        BSF[idx] = Results[0] * (1 / (2 * np.sqrt(m)))
-        BSF_loc[idx] = Results[1]
-        MultiLengthDiscordTable[idx, :] = left_mp * (1 / (2 * np.sqrt(m)))
+        BSF[m_pointer] = Results[0, 0] * (1 / (2 * np.sqrt(m)))
+        BSF_loc[m_pointer] = Results[0, 1]  # Only for k = 1
+
+        MultiLengthDiscordTable[m_pointer, :] = left_mp * (1 / (2 * np.sqrt(m)))
+
         BSFseed = BFS_for_i_plus_1 - 0.000001
+        m_pointer += 1
 
-    if enable_output:
-        print(f"MADRID's elapsed time is {time_bf} seconds.")
-        # Create plots similar to MATLAB version using matplotlib
-        # (Plot code omitted for brevity but would use matplotlib)
-
-    return MultiLengthDiscordTable, BSF, BSF_loc, time_bf
+    return MultiLengthDiscordTable, BSF, BSF_loc
 
 
 def DAMP_topK_new(
@@ -208,12 +261,12 @@ def DAMP_topK_new(
         X = int(2 ** nextpow2(8 * SubsequenceLength))
         flag = True
         expansion_num = 0
-        query = T[i : i + SubsequenceLength]
+        query = T[i : i + SubsequenceLength - 1]
 
         # Classic DAMP
         while approximate_distance >= best_so_far:
             # Case 1: At beginning of time series
-            if i - X + 1 + (expansion_num * SubsequenceLength) < 0:
+            if i - X + 1 + (expansion_num * SubsequenceLength) < 1:
                 approximate_distance = np.min(np.real(MASS_V2(T[0:i], query)))
                 Left_MP[i] = approximate_distance
 
@@ -224,9 +277,10 @@ def DAMP_topK_new(
                     for k in range(discord_num):
                         best_so_far = np.max(Left_MP_copy)
                         idx_max = np.argmax(Left_MP_copy)
-                        discord_start = max(0, idx_max - SubsequenceLength // 2)
+                        discord_start = max(0, idx_max - (SubsequenceLength // 2))
                         discord_end = max(
-                            1 + SubsequenceLength // 2, idx_max + SubsequenceLength // 2
+                            1 + (SubsequenceLength // 2),
+                            idx_max + (SubsequenceLength // 2),
                         )
                         Left_MP_copy[discord_start:discord_end] = float("-inf")
                 break
@@ -253,16 +307,17 @@ def DAMP_topK_new(
                     X *= 2
                     expansion_num += 1
 
+        # Commented out as we are focused on the Online MADRID implementation
         # Forward pruning if lookahead enabled
-        if lookahead != 0:
-            start_of_mass = min(i + SubsequenceLength, len(T))
-            end_of_mass = min(start_of_mass + lookahead - 1, len(T))
+        # if lookahead != 0:
+        #     start_of_mass = min(i + SubsequenceLength, len(T))
+        # end_of_mass = min(start_of_mass + lookahead - 1, len(T))
 
-            if (end_of_mass - start_of_mass + 1) > SubsequenceLength:
-                distance_profile = np.real(MASS_V2(T[start_of_mass:end_of_mass], query))
-                dp_index_less_than_BSF = np.where(distance_profile < best_so_far)[0]
-                ts_index_less_than_BSF = dp_index_less_than_BSF + start_of_mass
-                bool_vec[ts_index_less_than_BSF] = 0
+        # if (end_of_mass - start_of_mass + 1) > SubsequenceLength:
+        #     distance_profile = np.real(MASS_V2(T[start_of_mass:end_of_mass], query))
+        #     dp_index_less_than_BSF = np.where(distance_profile < best_so_far)[0]
+        #     ts_index_less_than_BSF = dp_index_less_than_BSF + start_of_mass
+        #     bool_vec[ts_index_less_than_BSF] = 0
 
     # Get results
     Results = np.zeros((discord_num, 2))
@@ -330,5 +385,3 @@ if __name__ == "__main__":
         train_test_split=672,
         enable_output=True,
     )
-
-    # print(MultiLengthDiscordTable)
