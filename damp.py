@@ -230,9 +230,9 @@ def DAMP_2_0(
 
     # Get top discord
     discord_score, position = np.amax(left_mp), np.argmax(left_mp)
-    print("\nResults:")
-    print(f"Pruning Rate: {PR}")
-    print(f"Predicted discord score/position: {discord_score} / {position}")
+    # print("\nResults:")
+    # print(f"Pruning Rate: {PR}")
+    # print(f"Predicted discord score/position: {discord_score} / {position}")
 
     # Outputs
     if enable_output:

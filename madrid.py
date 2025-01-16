@@ -93,7 +93,9 @@ def MADRID(
     m = m_set[m_pointer]
 
     # Initial DAMP run
-    left_mp, discord_score, position = DAMP_2_0(T, m, 1, train_test_split)
+    left_mp, discord_score, position = DAMP_2_0(
+        T, m, 1, train_test_split, enable_output=False
+    )
     MultiLengthDiscordTable[m_pointer, :] = left_mp * (1 / (2 * np.sqrt(m)))
     BSF[m_pointer] = discord_score * (1 / (2 * np.sqrt(m)))
     BSF_loc[:] = position
@@ -123,7 +125,7 @@ def MADRID(
 
     m_pointer = 0
     m = m_set[m_pointer]
-    left_mp, _, position_2 = DAMP_2_0(T, m, 1, train_test_split)
+    left_mp, _, position_2 = DAMP_2_0(T, m, 1, train_test_split, enable_output=False)
     MultiLengthDiscordTable[m_pointer, :] = left_mp * (1 / (2 * np.sqrt(m)))
 
     BSF[m_pointer] = np.max(MultiLengthDiscordTable[m_pointer, :])
@@ -152,7 +154,7 @@ def MADRID(
 
     m_pointer = len(m_set) - 1
     m = m_set[m_pointer]
-    left_mp, _, position_3 = DAMP_2_0(T, m, 1, train_test_split)
+    left_mp, _, position_3 = DAMP_2_0(T, m, 1, train_test_split, enable_output=False)
     MultiLengthDiscordTable[m_pointer, :] = left_mp * (1 / (2 * np.sqrt(m)))
 
     BSF[m_pointer] = np.max(MultiLengthDiscordTable[m_pointer, :])
@@ -199,7 +201,12 @@ def MADRID(
             continue
 
         Results, BFS_for_i_plus_1, left_mp = DAMP_topK_new(
-            T, train_test_split, m, k, 0, max(BSFseed, BSF[m_pointer])
+            T,
+            train_test_split,
+            m,
+            k,
+            False,
+            max(BSFseed, BSF[m_pointer]),
         )
 
         BSF[m_pointer] = Results[0, 0] * (1 / (2 * np.sqrt(m)))
