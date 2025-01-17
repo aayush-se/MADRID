@@ -1,8 +1,8 @@
 # MERLIN And DAMP Refined Iteratively on Demand (MADRID)
 
-This implementation is still a work in progress. All credit to the DAMP implementation is listed in the DAMP portion of the Readme. Please support their code too by visiting the original fork.
+While stable, this implementation is still a work in progress and can still be further optimized for Python. All credit to the Python DAMP implementation is listed in the respective portion of the README. Please support their code too by visiting the original fork!
 
-The official MADRID implementation in MATLAB is available [here](https://sites.google.com/view/madrid-icdm-23/home?authuser=0).
+This repository contains an unofficial Python implementation of MERLIN And DAMP Refinder Iteratively On Demand (MADRID), introduced in ["MADRID: A Hyper-Anytime Algorithm to Find Time Series Anomalies of all Lengths](https://www.dropbox.com/scl/fi/hd9gt0xs8v8mrsx3upwd3/ICDM23_Madrid_023.pdf?rlkey=s5s95y2eeyk159lx69qn1469e&e=1&dl=0) by Lu, Yue, et al. The official MADRID implementation in MATLAB is available [here](https://sites.google.com/view/madrid-icdm-23/home?authuser=0).
 
 ## Run
 
